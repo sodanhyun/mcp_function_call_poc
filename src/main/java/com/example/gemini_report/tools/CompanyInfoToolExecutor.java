@@ -56,7 +56,10 @@ public class CompanyInfoToolExecutor implements ToolExecutor {
 
     @Override
     public String getTemplatedPrompt(String originalPrompt) {
-        return "";
+        return String.format("""
+                원본 요청:
+                %s
+                """, originalPrompt);
     }
 
     @Override
