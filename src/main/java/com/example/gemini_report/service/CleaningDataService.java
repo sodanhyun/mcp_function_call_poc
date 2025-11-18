@@ -10,17 +10,6 @@ import java.time.LocalDateTime; // 날짜와 시간 정보를 다루는 LocalDat
 import java.time.LocalTime; // 시간 정보만 다루는 LocalTime 클래스 임포트
 import java.util.List; // List 인터페이스 임포트
 
-/**
- * {@code CleaningDataService}는 청소 데이터와 관련된 비즈니스 로직을 처리하는 서비스 클래스입니다.
- * 주로 데이터베이스에서 청소 데이터를 조회하는 기능을 제공합니다.
- * <p>
- * 이 클래스는 {@code @Service} 어노테이션을 통해 Spring의 서비스 계층 컴포넌트로 등록되며,
- * {@code @RequiredArgsConstructor}를 통해 final 필드인 {@link CleaningDataRepository}에 대한
- * 생성자 주입을 자동으로 처리합니다.
- * <p>
- * 이 서비스의 메서드는 {@link com.example.gemini_report.tools.ToolExecutor} 구현체에서 호출되어
- * Gemini 모델의 함수 호출(Function Call)에 대한 실제 데이터 조회 작업을 수행합니다.
- */
 @Service
 @RequiredArgsConstructor
 public class CleaningDataService {
@@ -28,20 +17,7 @@ public class CleaningDataService {
     // Spring Data JPA에 의해 자동으로 구현체가 생성되어 주입됩니다.
     private final CleaningDataRepository repository;
 
-    /**
-     * 지정된 시작일과 종료일 사이의 청소 데이터를 조회합니다.
-     * <p>
-     * 이 메서드는 {@link com.example.gemini_report.tools.ToolExecutor}에 의해 호출될 수 있도록 설계되었으며,
-     * {@code startDate}와 {@code endDate} 인자를 받아 해당 기간 동안의 모든 청소 기록을 반환합니다.
-     * <p>
-     * 인자로 받은 날짜가 {@code null}이거나 비어있는 경우, 기본값으로
-     * {@code startDate}는 현재 날짜로부터 1주일 전, {@code endDate}는 현재 날짜로 설정됩니다.
-     *
-     * @param startDate 조회할 기간의 시작일 (YYYY-MM-DD 형식의 문자열). {@code null} 또는 빈 문자열일 경우 기본값 사용.
-     * @param endDate 조회할 기간의 종료일 (YYYY-MM-DD 형식의 문자열). {@code null} 또는 빈 문자열일 경우 기본값 사용.
-     * @return 지정된 기간 내에 발생한 {@link CleaningData} 객체들의 리스트.
-     */
-    public List<CleaningData> get_cleaning_report(String startDate, String endDate) {
+    public List<CleaningData> getCleaningReport(String startDate, String endDate) {
         // 시작일이 null이거나 비어있는 경우, 현재 날짜로부터 1주일 전으로 기본값을 설정합니다.
         if (startDate == null || startDate.isEmpty()) {
             startDate = LocalDate.now().minusWeeks(1).toString();
