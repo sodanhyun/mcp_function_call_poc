@@ -1,4 +1,4 @@
-package com.example.gemini_report.langchain;
+package com.example.gemini_report.langchain.models;
 
 import com.google.genai.Client;
 import com.google.genai.types.EmbedContentConfig;
@@ -31,7 +31,7 @@ public class GeminiEmbeddingModel implements EmbeddingModel {
     @Override
     public Response<Embedding> embed(TextSegment textSegment) {
         // embedAll을 사용하여 단일 세그먼트를 임베딩
-        return Response.from(embedAll(Collections.singletonList(textSegment)).content().get(0));
+        return Response.from(embedAll(Collections.singletonList(textSegment)).content().getFirst());
     }
 
     /**
@@ -43,7 +43,7 @@ public class GeminiEmbeddingModel implements EmbeddingModel {
     public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
         List<String> texts = textSegments.stream()
                 .map(TextSegment::text)
-                .collect(Collectors.toList());
+                .toList();
 
         // com.google.genai 라이브러리는 현재 배치 임베딩을 직접 지원하지 않으므로,
         // 각 텍스트를 순차적으로 임베딩합니다.

@@ -1,4 +1,4 @@
-package com.example.gemini_report.langchain;
+package com.example.gemini_report.langchain.models;
 
 import com.google.genai.Client;
 import com.google.genai.types.*;

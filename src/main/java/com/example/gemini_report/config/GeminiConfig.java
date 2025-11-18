@@ -1,10 +1,15 @@
 package com.example.gemini_report.config;
 
-import com.example.gemini_report.langchain.GeminiEmbeddingModel;
-import com.example.gemini_report.langchain.GeminiStreamingChatModel;
-import com.example.gemini_report.service.Assistant;
-import com.example.gemini_report.tools.CustomTools;
+import com.example.gemini_report.langchain.models.GeminiEmbeddingModel;
+import com.example.gemini_report.langchain.models.GeminiStreamingChatModel;
+import com.example.gemini_report.langchain.Assistant;
+import com.example.gemini_report.langchain.tools.CustomTools;
+import com.google.common.collect.ImmutableList;
 import com.google.genai.Client;
+import com.google.genai.types.HarmBlockThreshold;
+import com.google.genai.types.HarmCategory;
+import com.google.genai.types.SafetySetting;
+import com.google.genai.types.ThinkingConfig;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -55,7 +60,9 @@ public class GeminiConfig {
      */
     @Bean
     public Client geminiClient() {
-        return Client.builder().apiKey(geminiApiKey).build();
+        return Client.builder()
+                .apiKey(geminiApiKey)
+                .build();
     }
 
     /**

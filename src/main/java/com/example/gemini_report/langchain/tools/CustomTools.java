@@ -1,12 +1,15 @@
-package com.example.gemini_report.tools;
+package com.example.gemini_report.langchain.tools;
 
 import com.example.gemini_report.entity.CleaningData;
 import com.example.gemini_report.service.CleaningDataService;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import dev.langchain4j.agent.tool.Tool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -28,9 +31,25 @@ public class CustomTools {
      * @param endDate   조회 종료 날짜 (YYYY-MM-DD 형식)
      * @return 생성된 청소 데이터 요약 보고서 문자열 (JSON 형식)
      */
-    @Tool("Get a cleaning data report for a given date range")
+    @Tool("지정된 기간 동안의 청소 데이터를 가져옵니다.")
     public String getCleaningReport(String startDate, String endDate) {
         List<CleaningData> reportData = cleaningDataService.getCleaningReport(startDate, endDate);
-        return gson.toJson(reportData);
+        return gson.newBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .create().toJson(reportData);
+    }
+
+    public static class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
+        private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+        @Override
+        public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(src.format(formatter));
+        }
+
+        @Override
+        public LocalDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            return LocalDateTime.parse(json.getAsString(), formatter);
+        }
     }
 }

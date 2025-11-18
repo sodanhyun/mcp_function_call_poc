@@ -5,12 +5,15 @@ import com.google.genai.types.FunctionCall;
 import com.google.genai.types.FunctionResponse;
 import com.google.genai.types.Part;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 /**
  * LangChain4j의 ChatMessage를 `com.google.genai`의 Content 객체로 변환하는 유틸리티 클래스입니다.
  */
+@Slf4j
 public class MessageConverter {
 
     private static final Gson GSON = new Gson();
@@ -71,7 +75,7 @@ public class MessageConverter {
      */
     private static List<Part> toGoogleAiParts(ChatMessage message) {
         if (message instanceof UserMessage) {
-            return Collections.singletonList(Part.fromText(((UserMessage) message).text()));
+            return Collections.singletonList(Part.fromText(((UserMessage) message).singleText()));
         }
 
         if (message instanceof SystemMessage) {
@@ -82,9 +86,19 @@ public class MessageConverter {
         if (message instanceof AiMessage aiMessage) {
             if (aiMessage.hasToolExecutionRequests()) {
                 List<Part> parts = aiMessage.toolExecutionRequests().stream()
-                        .map(toolExecutionRequest -> Part.fromFunctionCall(
-                                toolExecutionRequest.name(),
-                                JsonConverter.jsonToMap(GSON.toJsonTree(toolExecutionRequest.arguments()).getAsJsonObject())))
+                        .map(toolExecutionRequest -> {
+                            try {
+                                String argumentsJson = toolExecutionRequest.arguments();
+                                JsonObject jsonObject = JsonParser.parseString(argumentsJson).getAsJsonObject();
+                                return Part.fromFunctionCall(
+                                        toolExecutionRequest.name(),
+                                        JsonConverter.jsonToMap(jsonObject));
+                            } catch (Exception e) {
+                                // 로그 출력 및 기본 fallback 처리
+                                log.error("Invalid JSON in toolExecutionRequest arguments: {}", toolExecutionRequest.arguments(), e);
+                                return Part.fromFunctionCall(toolExecutionRequest.name(), Collections.emptyMap());
+                            }
+                        })
                         .collect(Collectors.toList());
                 // 텍스트가 있는 경우 텍스트 파트도 추가
                 if (aiMessage.text() != null && !aiMessage.text().isEmpty()) {
