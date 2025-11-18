@@ -1,9 +1,6 @@
 package com.example.gemini_report.langchain;
 
-import dev.langchain4j.service.MemoryId;
-import dev.langchain4j.service.SystemMessage;
-import dev.langchain4j.service.TokenStream;
-import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.*;
 import dev.langchain4j.service.spring.AiService;
 
 /**
@@ -14,7 +11,7 @@ import dev.langchain4j.service.spring.AiService;
  */
 
 @AiService
-public interface Assistant {
+public interface Agent {
 
     /**
      * 사용자의 메시지를 받아 스트리밍 방식으로 AI의 응답을 반환합니다.

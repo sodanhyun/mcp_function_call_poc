@@ -2,14 +2,9 @@ package com.example.gemini_report.config;
 
 import com.example.gemini_report.langchain.models.GeminiEmbeddingModel;
 import com.example.gemini_report.langchain.models.GeminiStreamingChatModel;
-import com.example.gemini_report.langchain.Assistant;
+import com.example.gemini_report.langchain.Agent;
 import com.example.gemini_report.langchain.tools.CustomTools;
-import com.google.common.collect.ImmutableList;
 import com.google.genai.Client;
-import com.google.genai.types.HarmBlockThreshold;
-import com.google.genai.types.HarmCategory;
-import com.google.genai.types.SafetySetting;
-import com.google.genai.types.ThinkingConfig;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -152,8 +147,8 @@ public class GeminiConfig {
      * @return Assistant 서비스 인스턴스
      */
     @Bean
-    public Assistant assistant(StreamingChatLanguageModel streamingChatLanguageModel, CustomTools customTools, ChatMemoryProvider chatMemoryProvider, ContentRetriever contentRetriever) {
-        return AiServices.builder(Assistant.class)
+    public Agent assistant(StreamingChatLanguageModel streamingChatLanguageModel, CustomTools customTools, ChatMemoryProvider chatMemoryProvider, ContentRetriever contentRetriever) {
+        return AiServices.builder(Agent.class)
                 .streamingChatLanguageModel(streamingChatLanguageModel)
                 .tools(customTools)
                 .chatMemoryProvider(chatMemoryProvider)

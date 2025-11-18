@@ -1,5 +1,6 @@
 package com.example.gemini_report.langchain.tools;
 
+import com.example.gemini_report.auth.UserContextHolder;
 import com.example.gemini_report.entity.CleaningData;
 import com.example.gemini_report.service.CleaningDataService;
 import com.google.gson.*;
@@ -33,6 +34,8 @@ public class CustomTools {
      */
     @Tool("지정된 기간 동안의 청소 데이터를 가져옵니다.")
     public String getCleaningReport(String startDate, String endDate) {
+        String currentUser = UserContextHolder.getUserName();
+        System.out.println("Current user: " + currentUser);
         List<CleaningData> reportData = cleaningDataService.getCleaningReport(startDate, endDate);
         return gson.newBuilder()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())

@@ -1,8 +1,9 @@
 package com.example.gemini_report.controller;
 
+import com.example.gemini_report.auth.UserContextHolder;
 import com.example.gemini_report.dto.ChatPromptRequest;
 import com.example.gemini_report.dto.EmbeddingRequest;
-import com.example.gemini_report.langchain.Assistant;
+import com.example.gemini_report.langchain.Agent;
 import com.example.gemini_report.service.embadding.EmbeddingService;
 import dev.langchain4j.service.TokenStream;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class AgentController {
 
-    private final Assistant assistant;
+    private final Agent agent;
     private final EmbeddingService embeddingService;
 
     @Qualifier("taskExecutor")
@@ -42,13 +43,15 @@ public class AgentController {
     @PostMapping(value = "/agent/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chat(@RequestBody ChatPromptRequest chatPromptRequest) {
 
+        String username = "hello";
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         String convId = (chatPromptRequest.getConversationId() == null || chatPromptRequest.getConversationId().isBlank()) ? UUID.randomUUID().toString() : chatPromptRequest.getConversationId();
 
         // AI의 응답(TokenStream)을 비동기적으로 처리하여 클라이언트에 전송
         taskExecutor.execute(() -> {
             try {
-                TokenStream tokenStream = assistant.chat(chatPromptRequest.getMessage(), convId);
+                UserContextHolder.setUserName(username);
+                TokenStream tokenStream = agent.chat(chatPromptRequest.getMessage(), convId);
 
                 // 첫 응답으로 대화 ID를 전송
                 emitter.send(SseEmitter.event().name("conversationId").data(convId));
@@ -65,6 +68,8 @@ public class AgentController {
                         .start();
             } catch (Exception e) {
                 emitter.completeWithError(e);
+            }finally {
+                UserContextHolder.clear();
             }
         });
 
