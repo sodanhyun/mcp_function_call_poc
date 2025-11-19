@@ -1,4 +1,4 @@
-package com.example.gemini_report.service.embadding;
+package com.example.gemini_report.langchain.embaddings;
 
 import io.milvus.client.MilvusServiceClient;
 import io.milvus.param.*;

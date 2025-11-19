@@ -1,6 +1,5 @@
-package com.example.gemini_report.service.embadding;
+package com.example.gemini_report.langchain.embaddings;
 
-import dev.langchain4j.service.V;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

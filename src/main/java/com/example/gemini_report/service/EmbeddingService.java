@@ -1,7 +1,7 @@
 package com.example.gemini_report.service;
 
-import com.example.gemini_report.service.embadding.EmbeddingStoreManager;
-import com.example.gemini_report.service.embadding.TextSplitterStrategy;
+import com.example.gemini_report.langchain.embaddings.EmbeddingStoreManager;
+import com.example.gemini_report.langchain.embaddings.TextSplitterStrategy;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
