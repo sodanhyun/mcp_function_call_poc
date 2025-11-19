@@ -39,18 +39,26 @@ public class AgentController {
      * 이 메서드는 실제 채팅 로직을 `conversationService`로 위임합니다.
      *
      * @param chatPromptRequest 사용자 메시지와 대화 ID를 포함하는 요청 DTO
-     * @param request 현재 HTTP 요청 객체 (URI 확인용)
      * @return Server-Sent Events (SSE)를 통해 AI의 응답을 스트리밍하는 SseEmitter
      */
-    @PostMapping(value = {"/agent/chat", "/agent/report"}, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/agent/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chat(
-            @RequestBody ChatPromptRequest chatPromptRequest, // @Valid 추가
-            HttpServletRequest request
+            @RequestBody ChatPromptRequest chatPromptRequest
     ) {
         //TODO 추후 인증 필터 처리 후 Spring Security Context 에서 꺼내 써야 함
         String username = "testUser";
         // 채팅 요청 처리를 ConversationService로 위임합니다.
-        return conversationService.startChat(chatPromptRequest, request, username);
+        return conversationService.startChat(chatPromptRequest, username);
+    }
+
+    @PostMapping(value = "/agent/report", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter report(
+            @RequestBody ChatPromptRequest chatPromptRequest
+    ) {
+        //TODO 추후 인증 필터 처리 후 Spring Security Context 에서 꺼내 써야 함
+        String username = "testUser";
+        // 채팅 요청 처리를 ConversationService로 위임합니다.
+        return conversationService.startReport(chatPromptRequest, username);
     }
 
     /**

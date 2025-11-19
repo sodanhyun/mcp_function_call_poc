@@ -2,7 +2,8 @@ package com.example.gemini_report.langchain.config;
 
 import com.example.gemini_report.langchain.Agent;
 import com.example.gemini_report.langchain.converters.LocalDateTimeAdapter;
-import com.example.gemini_report.langchain.tools.CustomTools;
+import com.example.gemini_report.langchain.tools.ChatTools;
+import com.example.gemini_report.langchain.tools.ReportTools;
 import com.google.genai.Client;
 import com.google.gson.Gson; // Gson 임포트
 import com.google.gson.GsonBuilder; // GsonBuilder 임포트
@@ -56,6 +57,20 @@ public class LangChainConfig {
 
     @Value("${milvus.embedding.dimension}")
     private Integer embeddingDimension;
+
+    /**
+     * Gson 인스턴스를 Spring Bean으로 등록합니다.
+     * `LocalDateTimeAdapter`를 등록하여 `LocalDateTime` 객체를 ISO 8601 형식으로
+     * 직렬화/역직렬화할 수 있도록 구성합니다.
+     *
+     * @return 구성된 `Gson` 인스턴스
+     */
+    @Bean
+    public Gson gson() {
+        return new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .create();
+    }
 
     /**
      * `com.google.genai` 클라이언트를 Bean으로 등록합니다.
@@ -163,32 +178,28 @@ public class LangChainConfig {
      * AI 서비스의 핵심 로직을 제공합니다.
      *
      * @param streamingChatLanguageModel 스트리밍 채팅 모델 (이전에 정의된 빈을 주입받음)
-     * @param customTools 사용자 정의 도구 (이전에 정의된 빈을 주입받음)
+     * @param tools 사용자 정의 도구 (이전에 정의된 빈을 주입받음)
      * @param chatMemoryProvider 대화 메모리 제공자 (이전에 정의된 빈을 주입받음)
      * @param contentRetriever RAG 콘텐츠 검색기 (이전에 정의된 빈을 주입받음)
      * @return LangChain4j에 의해 동적으로 생성된 `Agent` 인터페이스의 구현체
      */
     @Bean
-    public Agent assistant(StreamingChatLanguageModel streamingChatLanguageModel, CustomTools customTools, ChatMemoryProvider chatMemoryProvider, ContentRetriever contentRetriever) {
+    public Agent reportAgent(StreamingChatLanguageModel streamingChatLanguageModel, ReportTools tools, ChatMemoryProvider chatMemoryProvider, ContentRetriever contentRetriever) {
         return AiServices.builder(Agent.class)
                 .streamingChatLanguageModel(streamingChatLanguageModel)
-                .tools(customTools) // AI가 사용할 수 있는 도구들을 등록합니다.
+                .tools(tools) // AI가 사용할 수 있는 도구들을 등록합니다.
                 .chatMemoryProvider(chatMemoryProvider) // 대화 메모리 제공자를 등록합니다.
                 .contentRetriever(contentRetriever) // RAG를 위한 콘텐츠 검색기를 등록합니다.
                 .build();
     }
 
-    /**
-     * Gson 인스턴스를 Spring Bean으로 등록합니다.
-     * `LocalDateTimeAdapter`를 등록하여 `LocalDateTime` 객체를 ISO 8601 형식으로
-     * 직렬화/역직렬화할 수 있도록 구성합니다.
-     *
-     * @return 구성된 `Gson` 인스턴스
-     */
     @Bean
-    public Gson gson() {
-        return new GsonBuilder()
-                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
-                .create();
+    public Agent chatAgent(StreamingChatLanguageModel streamingChatLanguageModel, ChatTools tools, ChatMemoryProvider chatMemoryProvider, ContentRetriever contentRetriever) {
+        return AiServices.builder(Agent.class)
+                .streamingChatLanguageModel(streamingChatLanguageModel)
+                .tools(tools) // AI가 사용할 수 있는 도구들을 등록합니다.
+                .chatMemoryProvider(chatMemoryProvider) // 대화 메모리 제공자를 등록합니다.
+                .contentRetriever(contentRetriever) // RAG를 위한 콘텐츠 검색기를 등록합니다.
+                .build();
     }
 }

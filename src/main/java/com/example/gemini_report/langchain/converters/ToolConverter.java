@@ -29,7 +29,7 @@ public class ToolConverter {
      */
     public static List<Tool> toGoogleAiTools(List<ToolSpecification> toolSpecifications) {
         if (toolSpecifications == null || toolSpecifications.isEmpty()) {
-            return null; // 도구 명세가 없으면 null을 반환하여 API 요청에서 도구 필드를 생략하도록 합니다.
+            return List.of(); // 도구 명세가 없으면 null을 반환하여 API 요청에서 도구 필드를 생략하도록 합니다.
         }
         return List.of(
                 Tool.builder()

@@ -8,9 +8,6 @@ import dev.langchain4j.agent.tool.Tool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Type;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -20,7 +17,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class CustomTools {
+public class ReportTools {
 
     // CleaningDataService를 주입받아 청소 보고서 관련 비즈니스 로직을 수행합니다.
     private final CleaningDataService cleaningDataService;

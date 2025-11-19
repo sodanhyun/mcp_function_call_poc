@@ -29,7 +29,11 @@ import java.util.UUID;
 public class ConversationService {
 
     // LangChain4j Agent 인터페이스의 구현체를 주입받습니다.
-    private final Agent agent;
+    @Qualifier("reportAgent")
+    private final Agent reportAgent;
+
+    @Qualifier("chatAgent")
+    private final Agent chatAgent;
 
     // 비동기 작업을 위한 스레드 풀을 주입받습니다.
     @Qualifier("taskExecutor")
@@ -40,41 +44,49 @@ public class ConversationService {
      * 이 메서드는 `SseEmitter`를 사용하여 Server-Sent Events (SSE) 방식으로 실시간 응답을 처리합니다.
      *
      * @param chatPromptRequest 사용자 메시지와 대화 ID를 포함하는 요청 DTO
-     * @param request 현재 HTTP 요청 객체 (URI 확인용)
      * @return `SseEmitter` 객체. 클라이언트에게 이벤트를 스트리밍하는 데 사용됩니다.
      */
-    public SseEmitter startChat(ChatPromptRequest chatPromptRequest, HttpServletRequest request, String username) {
-        // 요청 URI가 "/agent/report"로 끝나는 경우, 보고서 생성을 위한 특정 프롬프트 형식을 적용합니다.
-        if(request.getRequestURI().endsWith("/agent/report")) { // 설정 값 사용
-            chatPromptRequest.setMessage(String.format("""
-                      제공받은 데이터셋을 분석하여, 전체 요약과 상세 보고서를 모두 포함하는 마크다운 형식의 리포트를 생성하세요.\\n\\
-                      리포트는 다음 항목을 포함해야 합니다:\\n\\
-                      \\n\\
-                      # 총괄 요약\\n\\
-                      - 데이터의 핵심 인사이트와 결론 요약\\n\\
-                      \\n\\
-                      # 상세 분석\\n\\
-                      - 섹션별 상세 분석\\n\\
-                      - 표와 리스트, 필요시 그래프 링크 포함 가능\\n\\
-                      \\n\\
-                      # 결론 및 제언\\n\\
-                      - 데이터 기반의 결론과 향후 조치/추천 사항\\n\\
-                      \\n\\
-                      **참고**:\\n\\
-                      - 항상 Markdown 형식 사용 (헤더, 리스트, 표, 코드블록 등)\\n\\
-                      - 요약은 주요 포인트를 간결하게\\n\\
-                      - 상세 분석은 항목별로 구체적 내용을 포함\\n\\
-                      원본 요청:\\n\\
-                      %s
-                    """, chatPromptRequest.getMessage())); // 설정 값 사용
-        }
-
+    public SseEmitter startChat(ChatPromptRequest chatPromptRequest, String username) {
         // 새로운 SseEmitter를 생성합니다. 타임아웃은 Long.MAX_VALUE로 설정하여 사실상 무한대입니다.
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         // 대화 ID가 요청에 포함되어 있지 않다면 새로운 ID를 생성합니다.
         String convId = (chatPromptRequest.getConversationId() == null || chatPromptRequest.getConversationId().isBlank())
                 ? UUID.randomUUID().toString()
                 : chatPromptRequest.getConversationId();
+        return createEmitter(chatPromptRequest, chatAgent, username);
+    }
+
+    public SseEmitter startReport(ChatPromptRequest chatPromptRequest, String username) {
+        chatPromptRequest.setMessage(String.format("""
+                  제공받은 데이터셋을 분석하여, 전체 요약과 상세 보고서를 모두 포함하는 마크다운 형식의 리포트를 생성하세요.\\n\\
+                  리포트는 다음 항목을 포함해야 합니다:\\n\\
+                  \\n\\
+                  # 총괄 요약\\n\\
+                  - 데이터의 핵심 인사이트와 결론 요약\\n\\
+                  \\n\\
+                  # 상세 분석\\n\\
+                  - 섹션별 상세 분석\\n\\
+                  - 표와 리스트, 필요시 그래프 링크 포함 가능\\n\\
+                  \\n\\
+                  # 결론 및 제언\\n\\
+                  - 데이터 기반의 결론과 향후 조치/추천 사항\\n\\
+                  \\n\\
+                  **참고**:\\n\\
+                  - 항상 Markdown 형식 사용 (헤더, 리스트, 표, 코드블록 등)\\n\\
+                  - 요약은 주요 포인트를 간결하게\\n\\
+                  - 상세 분석은 항목별로 구체적 내용을 포함\\n\\
+                  원본 요청:\\n\\
+                  %s
+                """, chatPromptRequest.getMessage())); // 설정 값 사용
+        return createEmitter(chatPromptRequest, reportAgent, username);
+    }
+
+    private SseEmitter createEmitter(ChatPromptRequest req, Agent agent, String username) {
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        // 대화 ID가 요청에 포함되어 있지 않다면 새로운 ID를 생성합니다.
+        String convId = (req.getConversationId() == null || req.getConversationId().isBlank())
+                ? UUID.randomUUID().toString()
+                : req.getConversationId();
 
         // AI의 응답(TokenStream)을 비동기적으로 처리하여 클라이언트에 전송합니다.
         // `taskExecutor`를 사용하여 별도의 스레드에서 실행됩니다.
@@ -84,7 +96,7 @@ public class ConversationService {
                 UserContextHolder.setUserName(username);
                 // Agent의 chat 메서드를 호출하여 Gemini 모델과 상호작용합니다.
                 // 스트리밍 방식으로 응답을 받으며, 각 토큰을 클라이언트에게 전송합니다.
-                TokenStream tokenStream = agent.chat(chatPromptRequest.getMessage(), convId);
+                TokenStream tokenStream = agent.chat(req.getMessage(), convId);
 
                 // 첫 응답으로 대화 ID를 전송합니다.
                 emitter.send(SseEmitter.event().name("conversationId").data(convId));
@@ -109,12 +121,10 @@ public class ConversationService {
             } catch (Exception e) {
                 // 예외 발생 시 emitter를 오류와 함께 완료합니다.
                 log.error("채팅 처리 중 오류 발생: {}", e.getMessage(), e);
-                emitter.completeWithError(e);
             }finally {
                 // 요청 처리 완료 후 스레드 로컬에 저장된 사용자 정보를 제거합니다.
                 UserContextHolder.clear();
-                // 최종적으로 emitter를 완료합니다. (onComplete/onError에서 이미 호출될 수 있으나, 안전을 위해)
-                // emitter.complete(); // 이중 호출 방지를 위해 주석 처리
+                emitter.complete();
             }
         });
 
