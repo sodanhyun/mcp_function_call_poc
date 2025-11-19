@@ -4,13 +4,14 @@ import com.example.gemini_report.dto.CleaningDataDTO;
 import com.example.gemini_report.entity.CleaningData; // CleaningData 엔티티 클래스 임포트
 import com.example.gemini_report.repository.CleaningDataRepository; // CleaningDataRepository 인터페이스 임포트
 import lombok.RequiredArgsConstructor; // Lombok 어노테이션으로 생성자 자동 생성
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service; // Spring 서비스 컴포넌트임을 나타내는 어노테이션
 
 import java.time.LocalDate; // 날짜 정보만 다루는 LocalDate 클래스 임포트
 import java.time.LocalDateTime; // 날짜와 시간 정보를 다루는 LocalDateTime 클래스 임포트
 import java.time.LocalTime; // 시간 정보만 다루는 LocalTime 클래스 임포트
-import java.util.List; // List 인터페이스 임포트
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * 청소 데이터 관련 비즈니스 로직을 처리하는 서비스 클래스입니다.

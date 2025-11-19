@@ -1,11 +1,15 @@
 package com.example.gemini_report.langchain.tools;
 
 import com.example.gemini_report.config.UserContextHolder;
-import com.example.gemini_report.dto.CleaningDataDTO; // CleaningDataDTO 임포트
+import com.example.gemini_report.dto.CleaningDataDTO;
 import com.example.gemini_report.service.CleaningDataService;
 import com.google.gson.*;
 import dev.langchain4j.agent.tool.Tool;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

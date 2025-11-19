@@ -3,17 +3,18 @@ package com.example.gemini_report.service;
 import com.example.gemini_report.config.UserContextHolder;
 import com.example.gemini_report.dto.ChatPromptRequest;
 import com.example.gemini_report.langchain.Agent;
+import dev.langchain4j.model.input.Prompt;
+import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.service.TokenStream;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -26,7 +27,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ConversationService {
+public class AgentService {
 
     // LangChain4j Agent 인터페이스의 구현체를 주입받습니다.
     @Qualifier("reportAgent")
@@ -57,7 +58,7 @@ public class ConversationService {
     }
 
     public SseEmitter startReport(ChatPromptRequest chatPromptRequest, String username) {
-        chatPromptRequest.setMessage(String.format("""
+        PromptTemplate template = PromptTemplate.from("""
                   제공받은 데이터셋을 분석하여, 전체 요약과 상세 보고서를 모두 포함하는 마크다운 형식의 리포트를 생성하세요.\\n\\
                   리포트는 다음 항목을 포함해야 합니다:\\n\\
                   \\n\\
@@ -75,9 +76,12 @@ public class ConversationService {
                   - 항상 Markdown 형식 사용 (헤더, 리스트, 표, 코드블록 등)\\n\\
                   - 요약은 주요 포인트를 간결하게\\n\\
                   - 상세 분석은 항목별로 구체적 내용을 포함\\n\\
-                  원본 요청:\\n\\
-                  %s
-                """, chatPromptRequest.getMessage())); // 설정 값 사용
+                  \\n\\
+                  이제 다음의 질문에 답변해주세요.\\n\\
+                  {{question}}
+                """); // 설정 값 사용
+        Prompt prompt = template.apply(Map.of("question", chatPromptRequest.getMessage()));
+        chatPromptRequest.setMessage(prompt.text());
         return createEmitter(chatPromptRequest, reportAgent, username);
     }
 

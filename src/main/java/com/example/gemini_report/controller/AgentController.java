@@ -2,9 +2,8 @@ package com.example.gemini_report.controller;
 
 import com.example.gemini_report.dto.ChatPromptRequest;
 import com.example.gemini_report.dto.EmbeddingRequest;
-import com.example.gemini_report.service.ConversationService;
+import com.example.gemini_report.service.AgentService;
 import com.example.gemini_report.service.EmbeddingService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -29,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 public class AgentController {
 
     // ConversationService를 주입받아 채팅 관련 비즈니스 로직을 위임합니다.
-    private final ConversationService conversationService;
+    private final AgentService agentService;
     // 임베딩 관련 비즈니스 로직을 처리하는 서비스를 주입받습니다.
     private final EmbeddingService embeddingService;
 
@@ -48,7 +47,7 @@ public class AgentController {
         //TODO 추후 인증 필터 처리 후 Spring Security Context 에서 꺼내 써야 함
         String username = "testUser";
         // 채팅 요청 처리를 ConversationService로 위임합니다.
-        return conversationService.startChat(chatPromptRequest, username);
+        return agentService.startChat(chatPromptRequest, username);
     }
 
     @PostMapping(value = "/agent/report", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -58,7 +57,7 @@ public class AgentController {
         //TODO 추후 인증 필터 처리 후 Spring Security Context 에서 꺼내 써야 함
         String username = "testUser";
         // 채팅 요청 처리를 ConversationService로 위임합니다.
-        return conversationService.startReport(chatPromptRequest, username);
+        return agentService.startReport(chatPromptRequest, username);
     }
 
     /**

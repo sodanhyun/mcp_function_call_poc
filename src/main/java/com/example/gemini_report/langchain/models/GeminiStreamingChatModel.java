@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.genai.Client;
 import com.google.genai.types.*;
 import com.google.gson.Gson;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -16,8 +18,10 @@ import lombok.RequiredArgsConstructor;
 import com.example.gemini_report.langchain.converters.MessageConverter;
 import com.example.gemini_report.langchain.converters.ToolConverter;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**

@@ -31,7 +31,7 @@ public class AgentConfig {
                 .streamingChatLanguageModel(streamingChatLanguageModel)
                 .tools(tools) // AI가 사용할 수 있는 도구들을 등록합니다.
                 .chatMemoryProvider(chatMemoryProvider) // 대화 메모리 제공자를 등록합니다.
-                .contentRetriever(contentRetriever) // RAG를 위한 콘텐츠 검색기를 등록합니다.
+//                .contentRetriever(contentRetriever) // RAG를 위한 콘텐츠 검색기를 등록합니다.
                 .build();
     }
 
