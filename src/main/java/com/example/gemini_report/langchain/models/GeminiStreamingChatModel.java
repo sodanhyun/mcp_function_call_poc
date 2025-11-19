@@ -1,5 +1,6 @@
 package com.example.gemini_report.langchain.models;
 
+import com.google.common.collect.ImmutableList;
 import com.google.genai.Client;
 import com.google.genai.types.*;
 import com.google.gson.Gson;
@@ -41,12 +42,27 @@ public class GeminiStreamingChatModel implements StreamingChatLanguageModel {
     public void generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications, StreamingResponseHandler<AiMessage> handler) {
         List<Content> googleAiMessages = MessageConverter.toGoogleAiMessages(messages);
         List<Tool> googleAiTools = ToolConverter.toGoogleAiTools(toolSpecifications);
+        GenerateContentConfig config = GenerateContentConfig.builder()
+//                .thinkingConfig(ThinkingConfig.builder().thinkingBudget(0))
+//                .candidateCount(1)
+//                .maxOutputTokens(1024)
+//                .safetySettings(ImmutableList.of(
+//                        SafetySetting.builder()
+//                                .category(HarmCategory.Known.HARM_CATEGORY_HATE_SPEECH)
+//                                .threshold(HarmBlockThreshold.Known.BLOCK_ONLY_HIGH)
+//                                .build(),
+//                        SafetySetting.builder()
+//                                .category(HarmCategory.Known.HARM_CATEGORY_DANGEROUS_CONTENT)
+//                                .threshold(HarmBlockThreshold.Known.BLOCK_LOW_AND_ABOVE)
+//                                .build()))
+                .tools(googleAiTools)
+                .build();
 
         // 스트리밍 응답을 처리하기 위한 로직
         AtomicReference<String> contentBuilder = new AtomicReference<>("");
         AtomicReference<ToolExecutionRequest> toolExecutionRequestRef = new AtomicReference<>(null);
 
-        geminiClient.models.generateContentStream(modelName, googleAiMessages, GenerateContentConfig.builder().tools(googleAiTools).build())
+        geminiClient.models.generateContentStream(modelName, googleAiMessages, config)
                 .forEach(response -> {
                     if (response.candidates().isPresent()) {
                         Candidate candidate = response.candidates().orElse(Collections.emptyList()).getFirst();

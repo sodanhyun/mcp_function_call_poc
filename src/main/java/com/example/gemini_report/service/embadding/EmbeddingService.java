@@ -3,6 +3,7 @@ package com.example.gemini_report.service.embadding;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -23,6 +25,7 @@ public class EmbeddingService {
     private final EmbeddingModel embeddingModel;
     private final EmbeddingStore<TextSegment> embeddingStore;
     private final EmbeddingStoreManager embeddingStoreManager;
+    private static final int MAX_TOKENS_PER_SEGMENT = 250;
 
     @Qualifier("taskExecutor")
     private final TaskExecutor taskExecutor;
@@ -37,14 +40,13 @@ public class EmbeddingService {
             log.info("Embedding and storing text: '{}'", text);
 
             // 1. 텍스트를 TextSegment로 변환합니다.
-            TextSegment segment = TextSegment.from(text);
+            List<TextSegment> segments = segmentText(text).stream().map(TextSegment::from).toList();
 
             // 2. EmbeddingModel을 사용하여 TextSegment를 임베딩합니다.
-            Embedding embedding = embeddingModel.embed(segment).content();
+            Response<List<Embedding>> embedding = embeddingModel.embedAll(segments);
 
             // 3. 임베딩된 TextSegment를 EmbeddingStore에 추가합니다.
-            // LangChain4j의 MilvusEmbeddingStore는 컬렉션이 없으면 자동으로 생성합니다.
-            embeddingStore.add(embedding, segment);
+            embeddingStore.addAll(embedding.content(), segments);
 
             log.info("Successfully embedded and stored the text.");
         }, taskExecutor);
@@ -68,6 +70,52 @@ public class EmbeddingService {
 
             log.info("Successfully reset and embedded the new text.");
         }, taskExecutor);
+    }
+
+     // 원하는 최대 토큰(단어) 수
+
+    /**
+     * 긴 텍스트를 문장 단위로 나누고, 각 세그먼트가 최대 토큰 수를 넘지 않도록 분할합니다.
+     *
+     * @param text 원본 긴 텍스트
+     * @return 텍스트 세그먼트 리스트
+     */
+    private List<String> segmentText(String text) {
+        List<String> segments = new ArrayList<>();
+
+        // 대략 문장 단위로 분할 ('.', '?' 등 기준), 간단하게 '.' 기준 예시
+        String[] sentences = text.split("(?<=[.!?])\\s+");
+
+        StringBuilder currentSegment = new StringBuilder();
+        int currentTokenCount = 0;
+
+        for (String sentence : sentences) {
+            int sentenceTokenCount = countTokens(sentence);
+
+            // 현재 세그먼트에 문장 더했을 때 최대 토큰 수 초과 시, 세그먼트 나누기
+            if (currentTokenCount + sentenceTokenCount > MAX_TOKENS_PER_SEGMENT) {
+                if (!currentSegment.isEmpty()) {
+                    segments.add(currentSegment.toString().trim());
+                    currentSegment.setLength(0);
+                    currentTokenCount = 0;
+                }
+            }
+
+            currentSegment.append(sentence).append(" ");
+            currentTokenCount += sentenceTokenCount;
+        }
+
+        // 마지막 세그먼트가 남아있다면 추가
+        if (!currentSegment.isEmpty()) {
+            segments.add(currentSegment.toString().trim());
+        }
+
+        return segments;
+    }
+
+    private int countTokens(String text) {
+        StringTokenizer tokenizer = new StringTokenizer(text);
+        return tokenizer.countTokens();
     }
 }
 

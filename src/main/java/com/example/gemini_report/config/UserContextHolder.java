@@ -1,4 +1,4 @@
-package com.example.gemini_report.auth;
+package com.example.gemini_report.config;
 
 public class UserContextHolder {
     private static final ThreadLocal<String> currentUser = new ThreadLocal<>();

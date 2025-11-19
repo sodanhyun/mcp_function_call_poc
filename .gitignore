@@ -77,6 +77,9 @@ local.properties
 !**/src/test/**/build/
 !**/src/test/**/target/
 
+# vector DB
+/volumes/
+
 # Log files
 *.log
 

@@ -1,8 +1,8 @@
-package com.example.gemini_report.config;
+package com.example.gemini_report.langchain.config;
 
+import com.example.gemini_report.langchain.Agent;
 import com.example.gemini_report.langchain.models.GeminiEmbeddingModel;
 import com.example.gemini_report.langchain.models.GeminiStreamingChatModel;
-import com.example.gemini_report.langchain.Agent;
 import com.example.gemini_report.langchain.tools.CustomTools;
 import com.google.genai.Client;
 import dev.langchain4j.data.segment.TextSegment;
@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
  * AI 모델, 임베딩, 벡터 저장소, 대화 메모리 등 AI 서비스의 핵심 구성요소를 설정합니다.
  */
 @Configuration
-public class GeminiConfig {
+public class LangChainConfig {
 
     // Gemini 모델 설정을 위한 프로퍼티
     @Value("${gemini.api.key}")
