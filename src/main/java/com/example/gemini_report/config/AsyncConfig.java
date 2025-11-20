@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator; // TaskDecorator 임포트
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.ThreadPoolExecutor;
@@ -15,7 +16,8 @@ import java.util.concurrent.ThreadPoolExecutor;
  * Spring 컨테이너가 이 클래스에서 정의된 `@Bean` 메서드를 통해 빈을 생성하도록 지시합니다.
  */
 @Configuration
-public class ThreadPoolConfig {
+@EnableAsync
+public class AsyncConfig {
 
     /**
      * 비동기 작업을 처리하기 위한 `TaskExecutor` Bean을 생성합니다.
@@ -24,7 +26,7 @@ public class ThreadPoolConfig {
      *
      * @return 설정이 완료된 `ThreadPoolTaskExecutor` 인스턴스
      */
-    @Bean
+    @Bean("taskExecutor")
     public TaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         // 코어 스레드 풀의 크기를 설정합니다. 이 수만큼의 스레드가 항상 유지됩니다.
@@ -37,7 +39,9 @@ public class ThreadPoolConfig {
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         // 생성되는 스레드의 이름 접두사를 설정하여 로그에서 스레드를 쉽게 식별할 수 있도록 합니다.
         executor.setThreadNamePrefix("async-task-");
-        
+        // Executor를 초기화합니다.
+        executor.initialize();
+
         // TaskDecorator를 설정하여 부모 스레드의 UserContextHolder 컨텍스트를 자식 스레드로 전파합니다.
         executor.setTaskDecorator(new TaskDecorator() {
             @NotNull
@@ -58,8 +62,8 @@ public class ThreadPoolConfig {
             }
         });
 
-        // Executor를 초기화합니다.
-        executor.initialize();
+        //TODO Spring Security 스펙 추가 후 아래 방식으로 Security Context 전파
+        // return new DelegatingSecurityContextExecutor(executor);
         return executor;
     }
 }

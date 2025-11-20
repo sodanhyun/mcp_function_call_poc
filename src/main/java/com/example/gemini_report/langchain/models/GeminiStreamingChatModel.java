@@ -61,7 +61,7 @@ public class GeminiStreamingChatModel implements StreamingChatLanguageModel {
         AtomicReference<StringBuilder> contentBuilder = new AtomicReference<>(new StringBuilder());
         AtomicReference<ToolExecutionRequest> toolExecutionRequestRef = new AtomicReference<>(null);
 
-        System.out.println("=====Agent Call 시작=====");
+        System.out.println("=====[Agent Calling]=====");
         geminiClient.models.generateContentStream(modelName, googleAiMessages, config)
         .forEach(response -> {
             if (response.candidates().isPresent()) {
@@ -93,8 +93,6 @@ public class GeminiStreamingChatModel implements StreamingChatLanguageModel {
                 });
             }
         });
-        System.out.println("=====Agent Call 끝=====");
-
         // 스트리밍 완료 후 응답 처리
         if (toolExecutionRequestRef.get() != null) {
             handler.onComplete(Response.from(AiMessage.from(toolExecutionRequestRef.get())));

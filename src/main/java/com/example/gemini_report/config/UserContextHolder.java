@@ -5,6 +5,7 @@ package com.example.gemini_report.config;
  * `ThreadLocal`을 사용하여 각 스레드마다 독립적인 사용자 정보를 유지할 수 있도록 합니다.
  * 이는 웹 요청과 같이 여러 스레드가 동시에 작업을 처리할 때 각 요청의 사용자 정보를 분리하여 관리하는 데 유용합니다.
  */
+// TODO Spring Security 스펙 추가 후 해당 클래스 삭제
 public class UserContextHolder {
     // ThreadLocal 변수를 선언하여 각 스레드에 String 타입의 사용자 이름을 저장할 수 있도록 합니다.
     private static final ThreadLocal<String> currentUser = new ThreadLocal<>();

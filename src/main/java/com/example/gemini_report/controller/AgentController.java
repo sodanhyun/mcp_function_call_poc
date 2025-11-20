@@ -47,7 +47,7 @@ public class AgentController {
         //TODO 추후 인증 필터 처리 후 Spring Security Context 에서 꺼내 써야 함
         String username = "testUser";
         // 채팅 요청 처리를 ConversationService로 위임합니다.
-        return agentService.startChat(chatPromptRequest, username);
+        return agentService.chat(chatPromptRequest, username);
     }
 
     @PostMapping(value = "/agent/report", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -57,7 +57,7 @@ public class AgentController {
         //TODO 추후 인증 필터 처리 후 Spring Security Context 에서 꺼내 써야 함
         String username = "testUser";
         // 채팅 요청 처리를 ConversationService로 위임합니다.
-        return agentService.startReport(chatPromptRequest, username);
+        return agentService.report(chatPromptRequest, username);
     }
 
     /**
