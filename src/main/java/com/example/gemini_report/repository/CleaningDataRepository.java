@@ -1,6 +1,8 @@
 package com.example.gemini_report.repository;
 
 import com.example.gemini_report.entity.CleaningData;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,12 +19,12 @@ import java.util.List;
 public interface CleaningDataRepository extends JpaRepository<CleaningData, Long> {
 
     /**
-     * 특정 시작 시간과 종료 시간 범위 내에 있는 청소 데이터를 조회합니다.
+     * 특정 시작 시간과 종료 시간 범위 내에 있는 청소 데이터를 페이징하여 조회합니다.
      * Spring Data JPA의 쿼리 메서드 기능을 활용하여 메서드 이름만으로 쿼리가 자동으로 생성됩니다.
      *
      * @param start 조회 시작 `LocalDateTime`
      * @param end 조회 종료 `LocalDateTime`
-     * @return 해당 시간 범위 내의 `CleaningData` 엔티티 리스트
+     * @return 해당 시간 범위 내의 `CleaningData` 엔티티 페이지
      */
     List<CleaningData> findByStartTimeBetween(LocalDateTime start, LocalDateTime end);
 }

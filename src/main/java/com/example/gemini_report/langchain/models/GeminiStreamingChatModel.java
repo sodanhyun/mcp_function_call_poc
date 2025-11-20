@@ -51,59 +51,55 @@ public class GeminiStreamingChatModel implements StreamingChatLanguageModel {
      */
     @Override
     public void generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications, StreamingResponseHandler<AiMessage> handler) {
-        // LangChain4j ChatMessage 리스트를 Gemini API의 Content 리스트로 변환합니다.
         List<Content> googleAiMessages = MessageConverter.toGoogleAiMessages(messages);
-        // LangChain4j ToolSpecification 리스트를 Gemini API의 Tool 리스트로 변환합니다.
         List<Tool> googleAiTools = ToolConverter.toGoogleAiTools(toolSpecifications);
 
-        // `GenerateContentConfig`를 빌드하여 모델 생성 설정을 정의합니다.
-        // 여기서는 도구들을 설정에 포함시킵니다.
         GenerateContentConfig config = GenerateContentConfig.builder()
-                // TODO: 필요에 따라 ThinkingConfig, candidateCount, maxOutputTokens, safetySettings 등을 설정할 수 있습니다.
-                .tools(googleAiTools) // 도구들을 요청에 포함시킵니다.
+                .tools(googleAiTools)
                 .build();
 
-        // 스트리밍 응답을 처리하기 위한 로직
-        // `contentBuilder`는 스트리밍되는 텍스트 토큰을 누적합니다.
-        AtomicReference<String> contentBuilder = new AtomicReference<>("");
-        // `toolExecutionRequestRef`는 함수 호출 요청이 있을 경우 이를 저장합니다.
+        AtomicReference<StringBuilder> contentBuilder = new AtomicReference<>(new StringBuilder());
         AtomicReference<ToolExecutionRequest> toolExecutionRequestRef = new AtomicReference<>(null);
 
-        // Gemini API 클라이언트를 호출하여 스트리밍 응답을 받습니다.
+        System.out.println("=====Agent Call 시작=====");
         geminiClient.models.generateContentStream(modelName, googleAiMessages, config)
-                .forEach(response -> {
-                    // 응답에 후보(candidate)가 존재하는지 확인합니다.
-                    if (response.candidates().isPresent()) {
-                        Candidate candidate = response.candidates().orElse(Collections.emptyList()).getFirst();
-                        // 후보의 콘텐츠 파트들을 순회합니다.
-                        candidate.content().flatMap(Content::parts).orElse(Collections.emptyList()).forEach(part -> {
-                            // 텍스트 파트가 존재하는 경우
-                            if (part.text().isPresent()) {
-                                String token = part.text().get();
-                                contentBuilder.updateAndGet(current -> current + token); // 토큰을 누적합니다.
-                                handler.onNext(token); // 핸들러에 다음 토큰을 전달합니다.
-                            }
-                            // 함수 호출 파트가 존재하는 경우
-                            else if (part.functionCall().isPresent()) {
-                                // `FunctionCall` 정보를 추출하여 LangChain4j의 `ToolExecutionRequest`로 변환합니다.
-                                FunctionCall functionCall = part.functionCall().get();
-                                ToolExecutionRequest toolExecutionRequest = ToolExecutionRequest.builder()
-                                        .name(functionCall.name().orElse("")) // 도구 이름 설정
-                                        .arguments(gson.toJson(functionCall.args().orElse(Collections.emptyMap()))) // 인자를 JSON 문자열로 변환
-                                        .build();
-                                toolExecutionRequestRef.set(toolExecutionRequest); // 함수 호출 요청을 저장합니다.
-                            }
-                        });
+        .forEach(response -> {
+            if (response.candidates().isPresent()) {
+                Candidate candidate = response.candidates().orElse(Collections.emptyList()).getFirst();
+                candidate.content().flatMap(Content::parts).orElse(Collections.emptyList()).forEach(part -> {
+                try {
+                    if (part.text().isPresent()) {
+                        String token = part.text().get();
+                        System.out.println(token);
+                        contentBuilder.get().append(token);
+                        handler.onNext(token);
+                    } else if (part.functionCall().isPresent()) {
+                        FunctionCall functionCall = part.functionCall().get();
+                        if (functionCall.name().isPresent() && functionCall.args().isPresent()) {
+                            System.out.println("=====[Tool Calling]=====");
+                            System.out.println("=====[Tool Name: " + functionCall.name().get() + "]=====");
+                            System.out.println("=====[Tool Args: " + functionCall.args().get() + "]=====");
+                            String rawArgs = gson.toJson(functionCall.args().orElse(Collections.emptyMap()));
+                            ToolExecutionRequest toolExecutionRequest = ToolExecutionRequest.builder()
+                                    .name(functionCall.name().orElse(""))
+                                    .arguments(rawArgs)
+                                    .build();
+                            toolExecutionRequestRef.set(toolExecutionRequest);
+                        }
                     }
+                } catch (Exception e) {
+                    System.err.println("Exception while processing streaming content: " + e.getMessage());
+                }
                 });
+            }
+        });
+        System.out.println("=====Agent Call 끝=====");
 
-        // 스트리밍 완료 후 최종 응답을 처리합니다.
+        // 스트리밍 완료 후 응답 처리
         if (toolExecutionRequestRef.get() != null) {
-            // 함수 호출 요청이 있었다면, 해당 요청을 포함하는 `AiMessage`를 완료 핸들러에 전달합니다.
             handler.onComplete(Response.from(AiMessage.from(toolExecutionRequestRef.get())));
         } else {
-            // 텍스트 응답만 있었다면, 누적된 텍스트를 포함하는 `AiMessage`를 완료 핸들러에 전달합니다.
-            handler.onComplete(Response.from(AiMessage.from(contentBuilder.get())));
+            handler.onComplete(Response.from(AiMessage.from(contentBuilder.get().toString())));
         }
     }
 

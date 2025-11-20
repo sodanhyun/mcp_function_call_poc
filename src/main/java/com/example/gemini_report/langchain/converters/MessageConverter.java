@@ -24,9 +24,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class MessageConverter {
-
-    private static final Gson GSON = new Gson();
-
     /**
      * ChatMessage 리스트를 Content 리스트로 변환합니다.
      * @param messages LangChain4j의 ChatMessage 리스트

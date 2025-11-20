@@ -27,12 +27,12 @@ public class CleaningDataService {
     private final CleaningDataRepository repository;
 
     /**
-     * 지정된 시작일과 종료일 사이의 청소 데이터를 조회합니다.
+     * 지정된 시작일과 종료일 사이의 청소 데이터를 페이징하여 조회합니다.
      * 시작일 또는 종료일이 제공되지 않으면 기본값을 사용합니다.
      *
      * @param startDate 조회 시작 날짜 (YYYY-MM-DD 형식의 문자열). null 또는 비어있으면 현재 날짜로부터 1주일 전으로 설정됩니다.
      * @param endDate   조회 종료 날짜 (YYYY-MM-DD 형식의 문자열). null 또는 비어있으면 현재 날짜로 설정됩니다.
-     * @return 해당 기간 내의 `CleaningData` 엔티티 리스트
+     * @return 해당 기간 내의 `CleaningDataDTO` 페이지
      */
     public List<CleaningDataDTO> getCleaningReport(String startDate, String endDate) {
         // 시작일이 null이거나 비어있는 경우, 현재 날짜로부터 1주일 전으로 기본값을 설정합니다.
@@ -49,7 +49,7 @@ public class CleaningDataService {
         // 문자열 형태의 종료일을 `LocalDate` 객체로 파싱하고, 해당 날짜의 마지막 시간(23:59:59.999999999)으로 `LocalDateTime`을 생성합니다.
         LocalDateTime endDateTime = LocalDate.parse(endDate).atTime(LocalTime.MAX);
 
-        // `CleaningDataRepository`를 사용하여 시작 시간과 종료 시간 사이에 있는 모든 청소 데이터를 조회하여 반환합니다.
+        // 조회된 데이터 페이지를 DTO 페이지로 변환하여 반환합니다.
         return repository.findByStartTimeBetween(startDateTime, endDateTime)
                 .stream()
                 .map(CleaningDataDTO::create)
